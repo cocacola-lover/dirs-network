@@ -1,6 +1,7 @@
 import docker
 import signal
 import sys
+import os
 
 import constants as const
 
@@ -21,6 +22,12 @@ def createContainer(i : int) :
     
 containers = [createContainer(i) for i in range(2)]
 
+def removeOldLogs() :
+    # Travers all the branch of a specified path
+    for root, dirs, files in os.walk('./logs'):
+        for f in files:
+            os.unlink(os.path.join(root, f))
+
 def extractLogs() :
     for container in containers :
         (_, out) = container.exec_run("cat logs.txt") 
@@ -29,6 +36,7 @@ def extractLogs() :
 
 def signal_handler(sig, frame):
     
+    removeOldLogs()
     extractLogs()
     
     for container in containers : container.remove(force=True)
