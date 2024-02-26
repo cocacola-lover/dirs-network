@@ -6,9 +6,9 @@ class Dirs_Network () :
     def __init__ (self, client : docker.DockerClient, length : int) :
         self.client = client
         self.network = client.networks.create(const.DIRS_NETWORK_NAME)
-        self.containers = [self.createContainer(i) for i in range(length)]
+        self.containers = [self.create_container(i) for i in range(length)]
         
-    def extractLogs(self) :
+    def extract_logs(self) :
         # Remove old logs
         for root, dirs, files in os.walk('./logs'):
             for f in files:
@@ -19,8 +19,8 @@ class Dirs_Network () :
             with open(f"logs/log_{container.name}.txt", "wb") as file:
                 file.write(out)
         
-    def cleanUp(self) :
-        self.extractLogs()
+    def clean_up(self) :
+        self.extract_logs()
         
         for container in self.containers : container.remove(force=True)        
         print('\nContainers have been stopped and removed')
@@ -28,7 +28,7 @@ class Dirs_Network () :
         self.network.remove()
         print('Network has been stopped and removed')
         
-    def createContainer(self, i : int) :
+    def create_container(self, i : int) :
         return self.client.containers.run(
             const.DIRS_IMAGE_NAME, 
             detach=True, 
