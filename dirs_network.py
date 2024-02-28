@@ -1,12 +1,15 @@
 import docker
 import os
 import constants as const
+import networkx as nx
+from environment import Environment as Env
 
-class Dirs_Network () :
-    def __init__ (self, client : docker.DockerClient, length : int) :
+
+class DirsNetwork () :
+    def __init__ (self, client : docker.DockerClient, graph : nx.Graph) :
         self.client = client
         self.network = client.networks.create(const.DIRS_NETWORK_NAME)
-        self.containers = [self.create_container(i) for i in range(length)]
+        self.containers = [self.create_container(i, graph[i]) for i in range(len(graph))]
         
     def extract_logs(self) :
         # Remove old logs
@@ -28,15 +31,15 @@ class Dirs_Network () :
         self.network.remove()
         print('Network has been stopped and removed')
         
-    def create_container(self, i : int) :
+    def create_container(self, num : int, neighbors : [int]) :
         return self.client.containers.run(
             const.DIRS_IMAGE_NAME, 
             detach=True, 
-            name=f"dirs-test{i}", 
-            ports={'3334/tcp': 3333 + i},
-            hostname=f"testContainer{i}",
+            name=f"{const.DIRS_CONTAINER_NAME}{num}", 
+            ports={'3334/tcp': 3333 + num},
+            hostname=f"{const.DIRS_CONTAINER_NAME}{num}",
             network=const.DIRS_NETWORK_NAME,
-            environment=[f'address=testContainer{i}', f'friends=["testContainer{i+1}"]']
+            environment=Env(num, neighbors).format()
         )
         
     @staticmethod
